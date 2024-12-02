@@ -8,7 +8,7 @@ pub fn part_one(input: &str) -> Option<u32> {
         let levels = report.split_whitespace().map(str::parse::<u32>).collect::<Result<Vec<u32>, _>>().expect("invalid report");
         let failed_index = check_report(&levels);
 
-        if failed_index.is_none() {
+        if failed_index.len() == 0 {
             safe += 1;
         }
     }
@@ -21,20 +21,28 @@ pub fn part_two(input: &str) -> Option<u32> {
     let reports = input.lines();
 
     for report in reports {
-        let mut levels = report.split_whitespace().map(str::parse::<u32>).collect::<Result<Vec<u32>, _>>().expect("invalid report");
+        let levels = report.split_whitespace().map(str::parse::<u32>).collect::<Result<Vec<u32>, _>>().expect("invalid report");
         let failed_index = check_report(&levels);
 
-        match failed_index {
-            Some(index) => {
-                levels.remove(index);
-                let failed_index = check_report(&levels);
-                if failed_index.is_none() {
-                    safe += 1;
-                }
-            }
-            None => {
+        if failed_index.len() == 0 {
+            safe += 1;
+            println!("safe report: {:?}", levels);
+            continue;
+        } else {
+            println!("failed initial report: {:?}", levels);
+        }
+
+        for index in failed_index {
+            let mut new_levels = levels.clone();
+            new_levels.remove(index as usize);
+
+            let failed_index = check_report(&new_levels);
+            if failed_index.len() == 0 {
+                println!("fixed report: {:?}", new_levels);
                 safe += 1;
-                continue;
+                break;
+            } else {
+                println!("failed report: {:?}", new_levels);
             }
         }
     }
@@ -42,8 +50,9 @@ pub fn part_two(input: &str) -> Option<u32> {
     Some(safe)
 }
 
-// If the report fails - returns the index of the first failed level
-fn check_report(levels: &Vec<u32>) -> Option<usize> {
+// If the report fails - returns index(s) which failed
+fn check_report(levels: &Vec<u32>) -> Vec<u32> {
+    let max_index = levels.len() - 1;
     let mut is_ascending: Option<bool> = None;
 
     for (index, window) in levels.windows(2).enumerate() {
@@ -53,7 +62,11 @@ fn check_report(levels: &Vec<u32>) -> Option<usize> {
         match is_ascending {
             Some(is_ascending) => {
                 if is_ascending != ascending {
-                    return Some(index); // unsafe - data is fluctuating
+                    if index == max_index {
+                        return vec![index as u32];
+                    }
+
+                    return vec![index as u32, (index + 1) as u32];
                 }
             }
             None => {
@@ -63,11 +76,15 @@ fn check_report(levels: &Vec<u32>) -> Option<usize> {
 
         let difference = if ascending { b - a } else { a - b };
         if difference < 1 || difference > 3 {
-            return Some(index); // unsafe - data changes too much or too little
+            if index == max_index {
+                return vec![index as u32];
+            }
+
+            return vec![index as u32, (index + 1) as u32];
         }
     }
 
-    None
+    vec![]
 }
 
 
@@ -85,6 +102,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, Some(4));
+        assert_eq!(result, Some(8));
     }
 }
