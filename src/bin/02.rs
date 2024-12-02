@@ -6,9 +6,7 @@ pub fn part_one(input: &str) -> Option<u32> {
 
     for report in reports {
         let levels = report.split_whitespace().map(str::parse::<u32>).collect::<Result<Vec<u32>, _>>().expect("invalid report");
-        let failed_index = check_report(&levels);
-
-        if failed_index.len() == 0 {
+        if report_valid(&levels) {
             safe += 1;
         }
     }
@@ -22,27 +20,14 @@ pub fn part_two(input: &str) -> Option<u32> {
 
     for report in reports {
         let levels = report.split_whitespace().map(str::parse::<u32>).collect::<Result<Vec<u32>, _>>().expect("invalid report");
-        let failed_index = check_report(&levels);
 
-        if failed_index.len() == 0 {
-            safe += 1;
-            println!("safe report: {:?}", levels);
-            continue;
-        } else {
-            println!("failed initial report: {:?}", levels);
-        }
-
-        for index in failed_index {
+        for index in 0..levels.len() {
             let mut new_levels = levels.clone();
-            new_levels.remove(index as usize);
+            new_levels.remove(index);
 
-            let failed_index = check_report(&new_levels);
-            if failed_index.len() == 0 {
-                println!("fixed report: {:?}", new_levels);
+            if report_valid(&new_levels) {
                 safe += 1;
                 break;
-            } else {
-                println!("failed report: {:?}", new_levels);
             }
         }
     }
@@ -50,23 +35,17 @@ pub fn part_two(input: &str) -> Option<u32> {
     Some(safe)
 }
 
-// If the report fails - returns index(s) which failed
-fn check_report(levels: &Vec<u32>) -> Vec<u32> {
-    let max_index = levels.len() - 1;
+fn report_valid(levels: &Vec<u32>) -> bool {
     let mut is_ascending: Option<bool> = None;
 
-    for (index, window) in levels.windows(2).enumerate() {
+    for window in levels.windows(2) {
         let [a, b] = *window else { panic!("invalid window") };
 
         let ascending = a < b;
         match is_ascending {
             Some(is_ascending) => {
                 if is_ascending != ascending {
-                    if index == max_index {
-                        return vec![index as u32];
-                    }
-
-                    return vec![index as u32, (index + 1) as u32];
+                    return false;
                 }
             }
             None => {
@@ -76,15 +55,11 @@ fn check_report(levels: &Vec<u32>) -> Vec<u32> {
 
         let difference = if ascending { b - a } else { a - b };
         if difference < 1 || difference > 3 {
-            if index == max_index {
-                return vec![index as u32];
-            }
-
-            return vec![index as u32, (index + 1) as u32];
+            return false
         }
     }
 
-    vec![]
+    true
 }
 
 
