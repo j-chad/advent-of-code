@@ -2,19 +2,41 @@ use regex::{Regex};
 
 advent_of_code::solution!(3);
 
-static MUL_TOKEN: &str = r"mul\((\d+),(\d+)\)";
 const ALL_TOKENS: &str = r"mul\((\d+),(\d+)\)|do\(\)|don't\(\)";
 
 pub fn part_one(input: &str) -> Option<u32> {
-    let mul_regex: Regex = Regex::new(MUL_TOKEN).unwrap();
-
     let mut total: u32 = 0;
 
-    // search input for all instances of "mul(a, b)"
-    for cap in mul_regex.captures_iter(input) {
-        let a = cap[1].parse::<u32>().expect("Failed to parse integer");
-        let b = cap[2].parse::<u32>().expect("Failed to parse integer");
-        total += a * b;
+    let mut index = 0;
+    while index < input.len() {
+        let token = &input[index..index + 1];
+
+        if token == "m" && &input[index..index + 4] == "mul(" {
+            let sep_index = input[index..].find(",");
+            let end_index = input[index..].find(")");
+
+            if sep_index.is_none() || end_index.is_none() {
+                index += 3;
+                continue;
+            }
+
+            if end_index? < sep_index? {
+                index += 3;
+                continue;
+            }
+
+            let a = input[index + 4..index + sep_index?].parse::<u32>();
+            let b = input[index + sep_index? + 1..index + end_index?].parse::<u32>();
+
+            if a.is_err() || b.is_err() {
+                index += 3;
+                continue;
+            }
+
+            total += a.unwrap() * b.unwrap();
+        }
+
+        index += 1;
     }
 
     Some(total)
