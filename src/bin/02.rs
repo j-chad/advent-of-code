@@ -35,7 +35,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     Some(safe)
 }
 
-fn report_valid(levels: &Vec<u32>) -> bool {
+fn report_valid(levels: &[u32]) -> bool {
     let mut is_ascending: Option<bool> = None;
 
     for window in levels.windows(2) {
@@ -54,7 +54,7 @@ fn report_valid(levels: &Vec<u32>) -> bool {
         }
 
         let difference = if ascending { b - a } else { a - b };
-        if difference < 1 || difference > 3 {
+        if !(1..=3).contains(&difference) {
             return false
         }
     }
