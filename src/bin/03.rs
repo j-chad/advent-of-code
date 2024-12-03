@@ -1,9 +1,6 @@
-use regex::{Regex};
-
 advent_of_code::solution!(3);
 
-const ALL_TOKENS: &str = r"mul\((\d+),(\d+)\)|do\(\)|don't\(\)";
-
+// ugly but very fast
 pub fn part_one(input: &str) -> Option<u32> {
     let mut total: u32 = 0;
 
@@ -34,32 +31,55 @@ pub fn part_one(input: &str) -> Option<u32> {
             }
 
             total += a.unwrap() * b.unwrap();
+            index += end_index?;
+        } else {
+            index += 1;
         }
-
-        index += 1;
     }
 
     Some(total)
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let token_regex: Regex = Regex::new(ALL_TOKENS).unwrap();
-
     let mut total: u32 = 0;
-
-    // iterate over all matches
     let mut is_multiplying = true;
-    for cap in token_regex.captures_iter(input) {
-        let token = &cap[0];
 
-        if token == "do()" {
+    let mut index = 0;
+    while index < input.len() {
+        let token = &input[index..index + 1];
+
+        if is_multiplying && token == "m" && &input[index..index + 4] == "mul(" {
+            let sep_index = input[index..].find(",");
+            let end_index = input[index..].find(")");
+
+            if sep_index.is_none() || end_index.is_none() {
+                index += 3;
+                continue;
+            }
+
+            if end_index? < sep_index? {
+                index += 3;
+                continue;
+            }
+
+            let a = input[index + 4..index + sep_index?].parse::<u32>();
+            let b = input[index + sep_index? + 1..index + end_index?].parse::<u32>();
+
+            if a.is_err() || b.is_err() {
+                index += 3;
+                continue;
+            }
+
+            total += a.unwrap() * b.unwrap();
+            index += end_index?;
+        }  else if token == "d" && &input[index..index + 4] == "do()" {
             is_multiplying = true;
-        } else if token == "don't()" {
+            index += 3;
+        } else if token == "d" && &input[index..index + 7] == "don't()" {
             is_multiplying = false;
-        } else if is_multiplying {
-            let a = cap[1].parse::<u32>().expect("Failed to parse integer");
-            let b = cap[2].parse::<u32>().expect("Failed to parse integer");
-            total += a * b;
+            index += 6;
+        } else {
+            index += 1;
         }
     }
 
