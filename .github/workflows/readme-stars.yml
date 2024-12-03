@@ -2,8 +2,8 @@ name: Update readme ⭐️ progress
 
 on:
     # !Please set a different minute than 51 if you enable this!
-    # schedule:
-    #     - cron: "51 */6 * * *" # Every 6 hours
+    schedule:
+        - cron: "28 */12 * * *" # Every 12 hours
     workflow_dispatch:
 
 jobs:
@@ -14,11 +14,26 @@ jobs:
             contents: write
         steps:
             - uses: actions/checkout@v4
+            - name: Set up cargo cache
+              uses: actions/cache@v4
+              continue-on-error: false
+              with:
+                  path: |
+                      ~/.cargo/bin/
+                      ~/.cargo/registry/index/
+                      ~/.cargo/registry/cache/
+                      ~/.cargo/git/db/
+                      target/
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+                  restore-keys: ${{ runner.os }}-cargo-
             - uses: k2bd/advent-readme-stars@v1
               with:
                   userId: ${{ secrets.AOC_USER_ID }}
                   sessionCookie: ${{ secrets.AOC_SESSION }}
                   year: ${{ secrets.AOC_YEAR }}
+                  leaderboardId: ${{ secrets.AOC_LEADERBOARD }}
+            - name: Benchmark
+              run: cargo time --all --store
             - uses: stefanzweifel/git-auto-commit-action@v5
               with:
                   commit_message: "update readme progress"
