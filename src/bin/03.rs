@@ -1,37 +1,39 @@
 advent_of_code::solution!(3);
 
+fn multiply(index: &usize, input: &str) -> Option<(u32, usize)> {
+    let start_index = *index + 4;
+
+    if &input[*index..start_index] != "mul(" {
+        return None;
+    }
+
+    let end_index = input[start_index..].find(")")? + start_index;
+    let sep_index = input[start_index..end_index].find(",")? + start_index;
+
+    let a = input[start_index..sep_index].parse::<u32>().ok()?;
+    let b = input[sep_index + 1..end_index].parse::<u32>().ok()?;
+
+    Some((a * b, end_index))
+}
+
 // ugly but very fast
 pub fn part_one(input: &str) -> Option<u32> {
     let mut total: u32 = 0;
 
     let mut index = 0;
-    while index < input.len() {
-        let token = &input[index..index + 1];
+    while index + 4 < input.len() {
+        let token = &input[index..index + 4];
 
-        if token == "m" && &input[index..index + 4] == "mul(" {
-            let sep_index = input[index..].find(",");
-            let end_index = input[index..].find(")");
-
-            if sep_index.is_none() || end_index.is_none() {
-                index += 3;
-                continue;
+        if token == "mul(" {
+            match multiply(&index, input) {
+                Some((value, end_index)) => {
+                    total += value;
+                    index = end_index;
+                }
+                None => {
+                    index += 4;
+                }
             }
-
-            if end_index? < sep_index? {
-                index += 3;
-                continue;
-            }
-
-            let a = input[index + 4..index + sep_index?].parse::<u32>();
-            let b = input[index + sep_index? + 1..index + end_index?].parse::<u32>();
-
-            if a.is_err() || b.is_err() {
-                index += 3;
-                continue;
-            }
-
-            total += a.unwrap() * b.unwrap();
-            index += end_index?;
         } else {
             index += 1;
         }
@@ -45,39 +47,25 @@ pub fn part_two(input: &str) -> Option<u32> {
     let mut is_multiplying = true;
 
     let mut index = 0;
-    while index < input.len() {
-        let token = &input[index..index + 1];
+    while index + 4 < input.len() {
+        let token = &input[index..index + 4];
 
-        if is_multiplying && token == "m" && &input[index..index + 4] == "mul(" {
-            let sep_index = input[index..].find(",");
-            let end_index = input[index..].find(")");
-
-            if sep_index.is_none() || end_index.is_none() {
-                index += 3;
-                continue;
+        if is_multiplying && token == "mul(" {
+            match multiply(&index, input) {
+                Some((value, end_index)) => {
+                    total += value;
+                    index = end_index;
+                }
+                None => {
+                    index += 4;
+                }
             }
-
-            if end_index? < sep_index? {
-                index += 3;
-                continue;
-            }
-
-            let a = input[index + 4..index + sep_index?].parse::<u32>();
-            let b = input[index + sep_index? + 1..index + end_index?].parse::<u32>();
-
-            if a.is_err() || b.is_err() {
-                index += 3;
-                continue;
-            }
-
-            total += a.unwrap() * b.unwrap();
-            index += end_index?;
-        }  else if token == "d" && &input[index..index + 4] == "do()" {
+        }  else if token == "do()" {
             is_multiplying = true;
-            index += 3;
-        } else if token == "d" && &input[index..index + 7] == "don't()" {
+            index += 4;
+        } else if index + 7 < input.len() && &input[index..index + 7] == "don't()" {
             is_multiplying = false;
-            index += 6;
+            index += 7;
         } else {
             index += 1;
         }
