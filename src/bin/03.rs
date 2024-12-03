@@ -1,5 +1,7 @@
 advent_of_code::solution!(3);
 
+// ugly solution but very fast!
+
 fn multiply(index: &usize, input: &str) -> Option<(u32, usize)> {
     let start_index = *index + 4;
 
@@ -16,7 +18,6 @@ fn multiply(index: &usize, input: &str) -> Option<(u32, usize)> {
     Some((a * b, end_index))
 }
 
-// ugly but very fast
 pub fn part_one(input: &str) -> Option<u32> {
     let mut total: u32 = 0;
 
