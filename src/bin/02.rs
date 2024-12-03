@@ -5,7 +5,11 @@ pub fn part_one(input: &str) -> Option<u32> {
     let reports = input.lines();
 
     for report in reports {
-        let levels = report.split_whitespace().map(str::parse::<u32>).collect::<Result<Vec<u32>, _>>().expect("invalid report");
+        let levels = report
+            .split_whitespace()
+            .map(str::parse::<u32>)
+            .collect::<Result<Vec<u32>, _>>()
+            .expect("invalid report");
         if report_valid(&levels) {
             safe += 1;
         }
@@ -19,7 +23,11 @@ pub fn part_two(input: &str) -> Option<u32> {
     let reports = input.lines();
 
     for report in reports {
-        let levels = report.split_whitespace().map(str::parse::<u32>).collect::<Result<Vec<u32>, _>>().expect("invalid report");
+        let levels = report
+            .split_whitespace()
+            .map(str::parse::<u32>)
+            .collect::<Result<Vec<u32>, _>>()
+            .expect("invalid report");
 
         for index in 0..levels.len() {
             let mut new_levels = levels.clone();
@@ -39,7 +47,9 @@ fn report_valid(levels: &[u32]) -> bool {
     let mut is_ascending: Option<bool> = None;
 
     for window in levels.windows(2) {
-        let [a, b] = *window else { panic!("invalid window") };
+        let [a, b] = *window else {
+            panic!("invalid window")
+        };
 
         let ascending = a < b;
         match is_ascending {
@@ -55,14 +65,12 @@ fn report_valid(levels: &[u32]) -> bool {
 
         let difference = if ascending { b - a } else { a - b };
         if !(1..=3).contains(&difference) {
-            return false
+            return false;
         }
     }
 
     true
 }
-
-
 
 #[cfg(test)]
 mod tests {

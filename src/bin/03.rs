@@ -61,7 +61,7 @@ pub fn part_two(input: &str) -> Option<u32> {
                     index += 4;
                 }
             }
-        }  else if token == "do()" {
+        } else if token == "do()" {
             is_multiplying = true;
             index += 4;
         } else if index + 7 < input.len() && &input[index..index + 7] == "don't()" {
