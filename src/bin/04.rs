@@ -1,22 +1,5 @@
 advent_of_code::solution!(4);
 
-// coord = (y, x) = (row, column) = (height, width)
-// (0, 0) = top left
-
-fn get_index(size: (usize, usize), coord: (usize, usize)) -> usize {
-    let x = coord.1;
-    let y = coord.0 * size.1;
-
-    x + y
-}
-
-fn get_coord(width: usize, index: usize) -> (usize, usize) {
-    let x = index % width;
-    let y = index / width;
-
-    (y, x)
-}
-
 fn get_lines(size: (usize, usize), coord: (usize, usize)) -> Vec<[(usize, usize); 3]> {
     let mut lines = Vec::with_capacity(8);
 
@@ -105,7 +88,7 @@ fn check_cross(matrix: &[Vec<char>], start: (usize, usize)) -> bool {
     false
 }
 
-fn check_line(matrix: &Vec<Vec<char>>, line: [(usize, usize); 3]) -> bool {
+fn check_line(matrix: &[Vec<char>], line: [(usize, usize); 3]) -> bool {
     let a = matrix[line[0].0][line[0].1];
     let b = matrix[line[1].0][line[1].1];
     let c = matrix[line[2].0][line[2].1];
