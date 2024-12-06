@@ -8,10 +8,10 @@ fn build_dag<'a>(rules: &[(&'a str, &'a str)], update: &[&str]) -> Graph<'a> {
     let mut graph: HashMap<&str, Vec<&str>> = HashMap::with_capacity(rules.len());
 
     for (left, right) in rules {
-        if !update.contains(left) || !update.contains(right) {
+        if (!update.contains(left)) || (!update.contains(right)) {
             continue;
         }
-
+        
         graph.entry(left)
             .and_modify(|e| { e.push(right); })
             .or_insert(vec![right]);
@@ -45,6 +45,10 @@ fn get_middle(update: &[&str]) -> u32 {
     let length = update.len();
     let middle = length / 2;
     
+    if length % 2 != 1 {
+        panic!("update length is not odd");
+    }
+    
     update[middle].parse::<u32>().expect("could not parse middle value")
 }
 
@@ -54,37 +58,42 @@ fn build_rules(input: &str) -> Vec<(&str, &str)> {
     }).collect()
 }
 
-fn fix_order<'a>(graph: &Graph<'a>, update: &[&'a str]) -> Vec<&'a str> {
-    let mut in_degree: HashMap<&str, usize> = graph.iter().map(|(k, v)| (*k, v.len())).collect();
+fn kahns_topo_sort<'a>(graph: &Graph<'a>) -> Vec<&'a str> {
+    let mut in_degree: HashMap<&str, usize> = HashMap::new();
+    let mut queue: Vec<&str> = Vec::new();
+    let mut sorted: Vec<&str> = Vec::new();
 
-    let mut zero_in_degree: Vec<&str> = in_degree.iter().filter_map(|(k, v)| if *v == 0 { Some(*k) } else { None }).collect();
-    let mut result = Vec::with_capacity(update.len());
+    for (node, _) in graph.iter() {
+        in_degree.entry(node).or_insert(0);
+    }
 
-    while let Some(node) = zero_in_degree.pop() {
-        if update.contains(&node) {
-            result.push(node);
-        }
-
-        let edges = match graph.get(node) {
-            Some(e) => e,
-            None => continue,
-        };
-
+    for (_, edges) in graph.iter() {
         for edge in edges {
-            let count = in_degree.get_mut(*edge).expect("could not get in degree");
-            *count -= 1;
+            *in_degree.entry(edge).or_insert(0) += 1;
+        }
+    }
 
-            if *count == 0 {
-                zero_in_degree.push(*edge);
+    for (node, degree) in in_degree.iter() {
+        if *degree == 0 {
+            queue.push(node);
+        }
+    }
+
+    while !queue.is_empty() {
+        let node = queue.pop().unwrap();
+        sorted.push(node);
+
+        for edge in graph.get(node).unwrap_or(&Vec::new()) {
+            let degree = in_degree.get_mut(edge).unwrap();
+            *degree -= 1;
+
+            if *degree == 0 {
+                queue.push(edge);
             }
         }
     }
 
-    if result.len() != in_degree.len() {
-        //panic!("cycle detected");
-    }
-
-    result
+    sorted
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -114,9 +123,10 @@ pub fn part_two(input: &str) -> Option<u32> {
     for update in updates.lines() {
         let update = update.split(",").collect::<Vec<&str>>();
         let graph = build_dag(&rules, &update);
+        let sorted_nodes = kahns_topo_sort(&graph);
 
         if !check_order(&graph, &update) {
-            let new_order = fix_order(&graph, &update);
+            let new_order = sorted_nodes.iter().filter(|&node| update.contains(node)).map(|&node| node).collect::<Vec<&str>>();
             total += get_middle(&new_order);
         }
     }
